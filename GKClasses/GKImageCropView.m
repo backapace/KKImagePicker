@@ -28,23 +28,6 @@ static CGRect GKScaleRect(CGRect rect, CGFloat scale)
     [super layoutSubviews];
 
     UIView *zoomView = [self.delegate viewForZoomingInScrollView:self];
-    
-    CGSize boundsSize = self.bounds.size;
-    CGRect frameToCenter = zoomView.frame;
-    
-    // center horizontally
-    if (frameToCenter.size.width < boundsSize.width)
-        frameToCenter.origin.x = (boundsSize.width - frameToCenter.size.width) / 2;
-    else
-        frameToCenter.origin.x = 0;
-    
-    // center vertically
-    if (frameToCenter.size.height < boundsSize.height)
-        frameToCenter.origin.y = (boundsSize.height - frameToCenter.size.height) / 2;
-    else
-        frameToCenter.origin.y = 0;
-    
-    zoomView.frame = frameToCenter;
 }
 
 @end
@@ -127,19 +110,17 @@ static CGRect GKScaleRect(CGRect rect, CGFloat scale)
 
 -(CGRect)_calcVisibleRectForCropArea{
     //scaled width/height in regards of real width to crop width
-    CGFloat scaleWidth = self.imageToCrop.size.width / self.cropSize.width;
-    CGFloat scaleHeight = self.imageToCrop.size.height / self.cropSize.height;
     CGFloat scale = 0.0f;
     
-    if (self.cropSize.width > self.cropSize.height) {
-        scale = (self.imageToCrop.size.width < self.imageToCrop.size.height ?
-                 MAX(scaleWidth, scaleHeight) :
-                 MIN(scaleWidth, scaleHeight));
-    }else{
-        scale = (self.imageToCrop.size.width < self.imageToCrop.size.height ?
-                 MIN(scaleWidth, scaleHeight) :
-                 MAX(scaleWidth, scaleHeight));
+    CGSize size = self.cropSize;
+    CGFloat height = self.imageToCrop.size.height;
+    CGFloat width = self.imageToCrop.size.width;
+    if (width/height > size.width/size.height) {
+        scale = height/size.height;
+    } else {
+        scale = width/size.width;
     }
+    
     //extract visible rect from scrollview and scale it
     CGRect visibleRect = [scrollView convertRect:scrollView.bounds toView:imageView];
     return visibleRect = GKScaleRect(visibleRect, scale);
@@ -177,7 +158,7 @@ static CGRect GKScaleRect(CGRect rect, CGFloat scale)
 
         self.userInteractionEnabled = YES;
         self.backgroundColor = [UIColor blackColor];
-        self.scrollView = [[ScrollView alloc] initWithFrame:self.bounds ];
+        self.scrollView = [[UIScrollView alloc] initWithFrame:self.bounds ];
         self.scrollView.showsHorizontalScrollIndicator = NO;
         self.scrollView.showsVerticalScrollIndicator = NO;
         self.scrollView.delegate = self;
@@ -192,14 +173,14 @@ static CGRect GKScaleRect(CGRect rect, CGFloat scale)
         [self.scrollView addSubview:self.imageView];
     
         
-        self.scrollView.minimumZoomScale = CGRectGetWidth(self.scrollView.frame) / CGRectGetWidth(self.imageView.frame);
+        self.scrollView.minimumZoomScale = 1;
         self.scrollView.maximumZoomScale = 20.0;
         [self.scrollView setZoomScale:1.0];
     }
     return self;
 }
 
-
+/*
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event{
     if (!self.resizableCropArea)
         return self.scrollView;
@@ -224,6 +205,7 @@ static CGRect GKScaleRect(CGRect rect, CGFloat scale)
     }
     return self.scrollView;
 }
+ //*/
 
 - (void)layoutSubviews{
     [super layoutSubviews];
@@ -253,10 +235,19 @@ static CGRect GKScaleRect(CGRect rect, CGFloat scale)
         faktoredHeight =  size.height;
     }
     
+    if (width/height > size.width/size.height) {
+        faktoredHeight = size.height;
+        faktoredWidth = faktoredHeight*width/height;
+    } else {
+        faktoredWidth = size.width;
+        faktoredHeight = faktoredWidth*height/width;
+    }
+    
     self.cropOverlayView.frame = self.bounds;
     self.scrollView.frame = CGRectMake(xOffset, yOffset, size.width, size.height);
-    self.scrollView.contentSize = CGSizeMake(size.width, size.height);
-    self.imageView.frame = CGRectMake(0, floor((size.height - faktoredHeight) * 0.5), faktoredWidth, faktoredHeight);
+    self.imageView.frame = CGRectMake(0, 0, faktoredWidth, faktoredHeight);
+    self.scrollView.contentSize = CGSizeMake(faktoredWidth, faktoredHeight);
+    self.scrollView.contentOffset = CGPointMake(floor((faktoredWidth-size.width) * 0.5), floor((faktoredHeight-size.height)*0.5));
 }
 
 #pragma mark -

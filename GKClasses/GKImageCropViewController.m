@@ -182,7 +182,7 @@
         UIBarButtonItem *lbl = [[UIBarButtonItem alloc] initWithCustomView:info];
         UIBarButtonItem *use = [[UIBarButtonItem alloc] initWithCustomView:self.useButton];
         
-        [self.toolbar setItems:[NSArray arrayWithObjects:cancel, flex, lbl, flex, use, nil]];
+        [self.toolbar setItems:[NSArray arrayWithObjects:cancel, flex, use, nil]];
 
     }
 }
@@ -212,6 +212,9 @@
         [self.navigationController setNavigationBarHidden:YES];
     } else {
         [self.navigationController setNavigationBarHidden:NO];
+    }
+    if ([self respondsToSelector:@selector(setEdgesForExtendedLayout:)]) {
+        self.edgesForExtendedLayout = UIRectEdgeNone;
     }
 }
 
