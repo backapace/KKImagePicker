@@ -110,6 +110,21 @@
     self.imgView.contentMode = UIViewContentModeScaleAspectFit;
     self.imgView.backgroundColor = [UIColor grayColor];
     [self.view addSubview:self.imgView];
+    
+#ifdef ONLINE
+    NSLog(@"%@", @(ONLINE));
+#if (ONLINE==1)
+    NSLog(@"1");
+    [self.customCropButton setTitle:@"Custom Crop Online" forState:UIControlStateNormal];
+#elif (ONLINE==2)
+    NSLog(@"2");
+    [self.customCropButton setTitle:@"Custom Crop Test" forState:UIControlStateNormal];
+#else
+    NSLog(@"0");
+#endif
+#else
+    NSLog(@"not define macro ONLINE");
+#endif
 }
 
 - (void)viewDidAppear:(BOOL)animated{
